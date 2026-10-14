@@ -157,7 +157,7 @@ const NC = TASKS.length * 2;   // number of Pre/Post cells
 
 /* ============ STATE ============ */
 const LS = 'hx3f32b.v1';
-let st = { entries:{}, equip:[], items:[], ops:[], def:{ location:'', line:'', cleanBy:'' } };
+let st = { entries:{}, equip:[], items:[], locations:[], lines:[], ops:[], def:{ location:'', line:'', cleanBy:'' } };
 try{ st = Object.assign(st, JSON.parse(localStorage.getItem(LS) || '{}')); }catch(e){}
 st.def = st.def || { location:'', line:'', cleanBy:'' };
 const persist = () => { try{ localStorage.setItem(LS, JSON.stringify(st)); }catch(e){} };
@@ -194,10 +194,15 @@ function pairs(){
 }
 const distinct = k => [...new Set(st.equip.map(r => r[k]).filter(Boolean))];
 function applyLists(j){
-  if (j.equipment){ st.equip = j.equipment || []; st.items = j.items || []; }
+  if (j.equipment){
+    st.equip = j.equipment || []; st.items = j.items || [];
+    st.locations = j.locations || []; st.lines = j.lines || [];
+  }
   else if (j.list){                                   // older backend: derive both lists
     st.equip = j.list.map(r => ({ equipment:r.equipment, serial:r.serial, location:r.location, line:r.line }));
     st.items = [...new Set(j.list.map(r => r.item).filter(Boolean))];
+    st.locations = [...new Set(j.list.map(r => r.location).filter(Boolean))];
+    st.lines = [...new Set(j.list.map(r => r.line).filter(Boolean))];
   }
 }
 
@@ -266,6 +271,15 @@ const lbl = (n, v) => v==='o' ? `${n} √` : v==='x' ? `${n} X` : n;
 const cnt = (t, off) => { let c = 0; for (let i = off; i < t.length; i += 2) if (t[i]) c++; return c; };
 
 /* ============ FILL ============ */
+function listField(label, field, options, value, selId){
+  const opts = options.slice();
+  if (value && !opts.includes(value)) opts.unshift(value);            // keep an older value visible
+  return opts.length
+    ? `<div class="field"><label for="${selId}">${label}</label><select id="${selId}" data-lsel="${field}">
+        <option value="">Select ${label.toLowerCase()}</option>${opts.map(o => `<option value="${esc(o)}" ${o===value?'selected':''}>${esc(o)}</option>`).join('')}</select></div>`
+    : `<div class="field"><label for="${selId}">${label}</label><input id="${selId}" data-mf="${field}" value="${esc(value)}" placeholder="${label}"></div>`;
+}
+
 function equipFields(f){
   const P = pairs(), items = st.items.slice();
   // equipment name (dropdown) -> serial number fills in by itself
@@ -307,17 +321,14 @@ function renderFill(){
       <button class="btn danger sm" data-del="${esc(e.id)}">Delete</button>
     </div>`).join('') : `<div class="entry"><span class="meta">No entries for ${fmtDate(S.date)} yet.</span></div>`;
 
-  const locs = distinct('location'), lines = distinct('line');
   return `
   <div class="panel">
     <h3>${editing ? 'Entry (saved automatically)' : 'New entry'}</h3>
     <div class="row">
       <div class="field"><label for="fDate">Date</label><input id="fDate" type="date" value="${S.date}"></div>
-      <div class="field"><label for="mfLoc">Location</label><input id="mfLoc" data-mf="location" list="dlLoc" value="${esc(f.location)}" placeholder="Location"></div>
-      <div class="field"><label for="mfLine">Production line</label><input id="mfLine" data-mf="line" list="dlLine" value="${esc(f.line)}" placeholder="Production line"></div>
+      ${listField('Location', 'location', st.locations, f.location, 'mfLoc')}
+      ${listField('Production line', 'line', st.lines, f.line, 'mfLine')}
     </div>
-    <datalist id="dlLoc">${locs.map(x => `<option value="${esc(x)}">`).join('')}</datalist>
-    <datalist id="dlLine">${lines.map(x => `<option value="${esc(x)}">`).join('')}</datalist>
     ${equipFields(f)}
     <p class="hint">Tap once for <b>√</b> (done), twice for <b>X</b> (task not related), three times to clear. <b>Pre</b> = before production, <b>Post</b> = after production. Everything is saved automatically a moment after you change it. To add Post later, open the entry from the list below with Edit. Press New entry to start another machine.</p>
   </div>
@@ -502,9 +513,9 @@ function renderSheetTab(){
   </div>
   <div class="panel">
     <h3 style="font-size:1.05rem">Dropdown lists</h3>
-    <p class="hint" style="margin:0 0 12px">${pairs().length} equipment · ${st.items.length} production item${st.items.length===1?'':'s'} loaded from the Google Sheet.</p>
+    <p class="hint" style="margin:0 0 12px">${pairs().length} equipment · ${st.items.length} production item${st.items.length===1?'':'s'} · ${st.locations.length} location${st.locations.length===1?'':'s'} · ${st.lines.length} line${st.lines.length===1?'':'s'} loaded from the Google Sheet.</p>
     <button class="btn alt" id="reloadBtn" ${on?'':'disabled'}>Reload lists</button>
-    <p class="hint">In the Google Sheet, tab <b>Equipment</b>: Equipment name | Serial number (Location and Production line are optional). Tab <b>Production Items</b>: one production item per row. Change them in the Sheet and the form updates by itself the next time it is opened or refreshed. Entries already saved keep the wording they were saved with.</p>
+    <p class="hint">In the Google Sheet, tab <b>Equipment</b>: Equipment name | Serial number (Location and Production line are optional). Tab <b>Production Items</b>: one production item per row. Tab <b>Locations</b> and tab <b>Production Lines</b>: one per row, for the Location and Production line dropdowns. Change them in the Sheet and the form updates by itself the next time it is opened or refreshed. Entries already saved keep the wording they were saved with.</p>
   </div>`;
 }
 async function connect(){
@@ -619,6 +630,7 @@ document.addEventListener('change', e => {
     scheduleAuto(); render();
   }
   else if (id === 'mfItemSel'){ S.mf.item = e.target.value; scheduleAuto(); }
+  else if (e.target.dataset && e.target.dataset.lsel){ S.mf[e.target.dataset.lsel] = e.target.value; scheduleAuto(); }
 });
 async function refreshLists(){
   if (!CONFIG.SCRIPT_URL) return;
