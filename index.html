@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HX3-F32 (B) Machine Cleaning Record</title>
+<style>
+:root{
+  --ink:#1d2a2b; --muted:#5d6b6c; --paper:#f4f6f4; --card:#ffffff; --line:#cdd6d2;
+  --green:#1d6b57; --amber:#a8590b; --red:#b3261e; --dark:#1f2a26;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:"Segoe UI",system-ui,-apple-system,Arial,sans-serif;background:var(--paper);color:var(--ink);font-size:16px;line-height:1.4;padding-bottom:40px}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid #2f7de1;outline-offset:2px}
+
+.top{background:var(--green);color:#fff;padding:12px 16px}
+.top h1{margin:0;font-size:1.15rem;font-weight:600}
+.top .sub{font-size:.85rem;opacity:.85}
+.sync{margin-left:auto;font-size:.8rem;padding:2px 10px;border-radius:99px;background:rgba(255,255,255,.18)}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:880px;margin:14px auto 0;padding:0 14px}
+.tabs button{border:1px solid var(--line);background:#fff;color:var(--muted);border-radius:10px;padding:14px 8px;font-weight:700;cursor:pointer;line-height:1.25}
+.tabs button[aria-selected="true"]{background:var(--dark);border-color:var(--dark);color:#fff}
+
+main{max-width:880px;margin:0 auto;padding:14px}
+main.wide{max-width:1500px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:14px}
+.panel h3{margin:0 0 10px;font-size:1rem}
+.row{display:flex;flex-wrap:wrap;gap:12px;align-items:end}
+.field{display:flex;flex-direction:column;gap:4px;flex:1 1 180px}
+.field label{font-size:.82rem;color:var(--muted);font-weight:600}
+.field input,.field select,.field textarea{border:1px solid var(--line);border-radius:8px;padding:10px;background:#fff;width:100%}
+.field input[readonly]{background:#eef2ef}
+.hint{font-size:.85rem;color:var(--muted);margin:8px 0 0}
+.btn{background:var(--green);color:#fff;border:0;border-radius:9px;padding:12px 24px;font-weight:700;cursor:pointer}
+.btn.alt{background:#fff;color:var(--green);border:2px solid var(--green)}
+.btn.danger{background:#fff;color:var(--red);border:2px solid var(--red)}
+.btn.sm{padding:8px 14px;font-size:.9rem}
+.btn[disabled]{opacity:.6}
+
+.quick{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+.quick button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:8px 12px;cursor:pointer;font-weight:600}
+.trow{display:flex;align-items:center;gap:8px;padding:8px 12px;flex-wrap:wrap}
+.trow+.trow{border-top:1px solid #e6ebe8}
+.tname{flex:1 1 200px;font-weight:600}
+.cellbtn{min-width:92px;min-height:46px;border-radius:9px;border:2px solid var(--line);background:#fff;cursor:pointer;font-weight:700;color:var(--muted)}
+.cellbtn.o{background:var(--green);border-color:var(--green);color:#fff}
+.cellbtn.post.o{background:var(--amber);border-color:var(--amber)}
+.cellbtn.x{background:#5d6b6c;border-color:#5d6b6c;color:#fff}
+.group{border:1px solid var(--line);border-radius:10px;background:#fff;margin-bottom:14px;overflow:hidden}
+.group h3{margin:0;padding:9px 12px;font-size:.95rem;background:#eef2ef;border-bottom:1px solid var(--line)}
+
+.entry{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 12px;border-top:1px solid #e6ebe8}
+.entry:first-of-type{border-top:0}
+.entry .info{flex:1 1 220px}
+.entry .info b{display:block}
+.entry .meta{font-size:.85rem;color:var(--muted)}
+.badge{display:inline-block;font-size:.75rem;font-weight:700;border-radius:99px;padding:1px 8px;background:#dcefe8;color:var(--green)}
+.badge.no{background:#fbe9d2;color:var(--amber)}
+
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 18px;border-radius:9px;font-size:.92rem;z-index:20;max-width:90vw}
+.toast.err{background:var(--red)}
+.hidden{display:none!important}
+.warn{color:var(--amber);font-weight:600}
+.okc{color:var(--green);font-weight:600}
+
+/* sheet */
+.sheetwrap{overflow-x:auto;background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:14px}
+.sheet{font-family:Arial,Helvetica,sans-serif;color:#000;min-width:1300px}
+.sheet table{border-collapse:collapse;width:100%}
+.sheet td,.sheet th{border:1px solid #000;padding:0 4px}
+.hd{table-layout:fixed;margin-bottom:6px}
+.hd td{font-size:11px;height:19px}
+.hd .t{text-align:center;font-weight:700;font-size:12px;color:#444}
+.hd .k{color:#666;width:11%}
+.hd .v{color:#666;width:12%}
+.hd .tl{width:77%}
+.meta2{display:flex;justify-content:space-between;font-size:11px;margin:5px 0}
+.grid{table-layout:fixed}
+.grid th{background:#e0e0e0;font-size:10px;font-weight:700;padding:2px 3px}
+.grid th.pp{font-size:9px;font-weight:700;padding:0}
+.grid th.tn{font-size:8px;line-height:1.1;font-weight:700;vertical-align:middle}
+.grid col.cd{width:78px}.grid col.ce{width:170px}.grid col.cs{width:110px}.grid col.ci{width:140px}
+.grid col.ck{width:40px}.grid col.cc{width:100px}.grid col.cv{width:110px}
+.grid td{height:28px;font-size:10px;vertical-align:middle;padding:0 4px}
+.grid td.k{text-align:center;font-weight:700;font-size:12px;padding:0}
+.remarks{font-size:10px;margin-top:6px}
+
+@media (max-width:560px){ .cellbtn{min-width:78px} .tname{flex:1 1 100%} .trow .cellbtn{flex:1} }
+
+@media print{
+  @page{size:A4 landscape;margin:7mm}
+  body{background:#fff;padding:0}
+  .noprint{display:none!important}
+  main{max-width:none;padding:0}
+  .sheetwrap{overflow:visible;border:0;border-radius:0;padding:0;margin:0}
+  .sheet{min-width:0;break-after:page;page-break-after:always}
+  #sheets .sheetwrap:last-child .sheet{break-after:auto;page-break-after:auto}
+  .hd td{font-size:8pt;height:4.2mm}
+  .hd .t{font-size:9pt}
+  .meta2,.remarks{font-size:8pt}
+  .grid th{font-size:7pt}
+  .grid th.pp{font-size:6.5pt}
+  .grid th.tn{font-size:5.8pt}
+  .grid col.cd{width:16mm}.grid col.ce{width:36mm}.grid col.cs{width:24mm}.grid col.ci{width:30mm}
+  .grid col.ck{width:7.6mm}.grid col.cc{width:22mm}.grid col.cv{width:24mm}
+  .grid td{height:6mm;font-size:6.5pt;padding:0 1mm}
+  .grid td.k{font-size:8pt}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+</style>
+</head>
+<body>
+
+<header class="top noprint">
+  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+    <div>
+      <h1>Machine Cleaning Record</h1>
+      <div class="sub">HEXA FOOD (HEXA 3) · HX3-F32 (B) · Issue 1</div>
+    </div>
+    <span class="sync" id="sync">Local only</span>
+  </div>
+</header>
+
+<nav class="tabs noprint" role="tablist">
+  <button role="tab" data-tab="fill" aria-selected="true">Fill</button>
+  <button role="tab" data-tab="records" aria-selected="false">Records / Print</button>
+  <button role="tab" data-tab="sheet" aria-selected="false">Google Sheet</button>
+</nav>
+
+<main id="main"></main>
+<div class="toast hidden" id="toast" role="status"></div>
+
+<script>
+/* ============ SETTINGS ============
+   The Google Apps Script Web App URL is set from the "Google Sheet" tab
+   (or put it in DEFAULT_URL to pre-fill for everyone). */
+const DEFAULT_URL = 'https://script.google.com/macros/s/AKfycbwcyzLD8hkHrKmQ4BLAtdYyE4QI4b9c-ESR-kk0s_9hokTAQj6_YEcauUfzcG1oyFOf/exec';
+const URL_KEY = 'hx3f32b.url';
+const CONFIG = { SCRIPT_URL: (function(){ try{ return localStorage.getItem(URL_KEY) || DEFAULT_URL; }catch(e){ return DEFAULT_URL; } })() };
+
+const DOC = { no:'HX3-F32 (B)', issue:'1', date:'01/09/2025' };
+const ROWS_PER_PAGE = 20;
+// 8 task columns, each has Pre and Post. Edit names here if the paper form differs.
+const TASKS = [
+  'Body cavity (inner wall, edge)',
+  'Inner components (ribbon, shaft, hopper, etc)',
+  'Outer body & motor cover',
+  'Lid',
+  'Legs & wheels',
+  'Conveyor',
+  'Knobs / Pulleys / Buttons',
+  'Cords & Socket'
+];
+const NC = TASKS.length * 2;   // number of Pre/Post cells
+
+/* ============ STATE ============ */
+const LS = 'hx3f32b.v1';
+let st = { entries:{}, equip:[], items:[], ops:[], def:{ location:'', line:'', cleanBy:'' } };
+try{ st = Object.assign(st, JSON.parse(localStorage.getItem(LS) || '{}')); }catch(e){}
+st.def = st.def || { location:'', line:'', cleanBy:'' };
+const persist = () => { try{ localStorage.setItem(LS, JSON.stringify(st)); }catch(e){} };
+const pad = n => String(n).padStart(2,'0');
+const todayStr = () => { const d=new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; };
+const esc = s => String(s??'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmtDate = d => { if(!d) return ''; const [y,m,dd]=d.split('-'); return `${dd}/${m}/${y}`; };
+const monthLabel = m => { const [y,mo]=m.split('-'); return `${mo}/${y}`; };
+const genId = () => 'm' + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+const blankDraft = () => ({ id:null, equipment:'', serial:'', item:'', location:st.def.location||'', line:st.def.line||'',
+  cleanBy:st.def.cleanBy||'', t:Array(NC).fill(''), verifiedBy:'', verifiedAt:'' });
+const S = { tab:'fill', date:todayStr(), rMonth:todayStr().slice(0,7), rGroup:'', mf:blankDraft(), sync: CONFIG.SCRIPT_URL ? 'ok' : 'local' };
+
+const entriesOf = m => st.entries[m] || (st.entries[m] = []);
+function upsertLocal(e){
+  const arr = entriesOf(e.month); const i = arr.findIndex(x => x.id === e.id);
+  if (i >= 0) arr[i] = e; else arr.push(e);
+}
+function removeLocal(id){
+  Object.keys(st.entries).forEach(m => { st.entries[m] = st.entries[m].filter(e => e.id !== id); });
+}
+const findEntry = id => { for (const m of Object.keys(st.entries)){ const e = st.entries[m].find(x => x.id === id); if (e) return e; } return null; };
+
+/* ============ EQUIPMENT LIST (from Google Sheet "Machines") ============ */
+const SEP = '\u0001';
+// Equipment list (name -> serial) and production items are two separate lists kept in the Google Sheet.
+function pairs(){
+  const seen = new Map();
+  st.equip.forEach(r => { const k = r.equipment + SEP + r.serial; if (!seen.has(k)) seen.set(k, { key:k, equipment:r.equipment, serial:r.serial }); });
+  const arr = [...seen.values()];
+  const counts = {}; arr.forEach(x => { counts[x.equipment] = (counts[x.equipment] || 0) + 1; });
+  arr.forEach(x => { x.label = counts[x.equipment] > 1 && x.serial ? `${x.equipment} — ${x.serial}` : x.equipment; });  // add serial only when names repeat
+  return arr;
+}
+const distinct = k => [...new Set(st.equip.map(r => r[k]).filter(Boolean))];
+function applyLists(j){
+  if (j.equipment){ st.equip = j.equipment || []; st.items = j.items || []; }
+  else if (j.list){                                   // older backend: derive both lists
+    st.equip = j.list.map(r => ({ equipment:r.equipment, serial:r.serial, location:r.location, line:r.line }));
+    st.items = [...new Set(j.list.map(r => r.item).filter(Boolean))];
+  }
+}
+
+/* ============ NETWORK ============ */
+async function netGet(action, params){
+  const q = new URLSearchParams(Object.assign({ action }, params || {}));
+  const r = await fetch(`${CONFIG.SCRIPT_URL}?${q}`);
+  return r.json();
+}
+async function netPost(body){
+  const r = await fetch(CONFIG.SCRIPT_URL, { method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify(body) });
+  return r.json();
+}
+function updateChip(){
+  if (typeof updateMfStatus === 'function') updateMfStatus();
+  const el = document.getElementById('sync');
+  if (!CONFIG.SCRIPT_URL) el.textContent = 'Local only';
+  else if (S.sync === 'offline') el.textContent = st.ops.length ? `Offline · ${st.ops.length} waiting` : 'Offline';
+  else el.textContent = st.ops.length ? `${st.ops.length} waiting to sync` : 'Google Sheet connected';
+}
+let flushing = false;
+async function flush(){
+  if (!CONFIG.SCRIPT_URL || flushing || !st.ops.length){ updateChip(); return; }
+  flushing = true;
+  try{
+    while (st.ops.length){
+      const op = st.ops[0];
+      const res = await netPost(op);
+      if (!res.ok) throw new Error(res.error || 'failed');
+      const at = st.ops.indexOf(op); if (at >= 0) st.ops.splice(at, 1);   // a newer save of the same entry may have replaced it
+      persist();
+    }
+    S.sync = 'ok';
+  }catch(e){ S.sync = 'offline'; }
+  finally{ flushing = false; updateChip(); }
+}
+function mergeRemote(month, remote){
+  const mine = st.ops.filter(o => o.month === month);
+  const saveIds = new Set(mine.filter(o => o.action==='msave').map(o => o.entry.id));
+  const delIds = new Set(st.ops.filter(o => o.action==='mdelete').map(o => o.id));
+  const out = remote.filter(e => !saveIds.has(e.id) && !delIds.has(e.id));
+  mine.filter(o => o.action==='msave').forEach(o => out.push(o.entry));
+  mine.filter(o => o.action==='mverify').forEach(o => out.forEach(e => { if (o.ids.includes(e.id)){ e.verifiedBy = o.name; e.verifiedAt = o.at; } }));
+  st.entries[month] = out;
+}
+async function pullMonth(month){
+  if (!CONFIG.SCRIPT_URL) return;
+  try{
+    const [a, b] = await Promise.all([ netGet('machines'), netGet('mlist', { month }) ]);
+    if (!a.ok || !b.ok) throw new Error();
+    applyLists(a);
+    mergeRemote(month, b.entries || []);
+    persist(); S.sync = 'ok';
+  }catch(e){ S.sync = 'offline'; }
+  updateChip();
+}
+
+/* ============ UI HELPERS ============ */
+let toastTimer;
+function toast(msg, err){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast' + (err ? ' err' : '');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.add('hidden'), 3200);
+}
+const lbl = (n, v) => v==='o' ? `${n} √` : v==='x' ? `${n} X` : n;
+const cnt = (t, off) => { let c = 0; for (let i = off; i < t.length; i += 2) if (t[i]) c++; return c; };
+
+/* ============ FILL ============ */
+function equipFields(f){
+  const P = pairs(), items = st.items.slice();
+  // equipment name (dropdown) -> serial number fills in by itself
+  const cur = f.equipment + SEP + f.serial;
+  const opts = P.slice();
+  if (f.equipment && !opts.some(x => x.key === cur)) opts.unshift({ key:cur, equipment:f.equipment, serial:f.serial, label:f.equipment });
+  const equipPart = P.length
+    ? `<div class="field" style="flex:2 1 240px"><label for="mfEq">Equipment name</label>
+        <select id="mfEq"><option value="">Select equipment</option>${opts.map(x => `<option value="${esc(x.key)}" ${x.key===cur&&f.equipment?'selected':''}>${esc(x.label)}</option>`).join('')}</select></div>
+       <div class="field"><label>Serial number</label><input value="${esc(f.serial)}" readonly placeholder="Fills in automatically"></div>`
+    : `<div class="field" style="flex:2 1 240px"><label for="mfEquip">Equipment name</label><input id="mfEquip" data-mf="equipment" value="${esc(f.equipment)}"></div>
+       <div class="field"><label for="mfSerial">Serial number</label><input id="mfSerial" data-mf="serial" value="${esc(f.serial)}"></div>`;
+  // production item (its own dropdown)
+  if (f.item && !items.includes(f.item)) items.unshift(f.item);
+  const itemPart = items.length
+    ? `<div class="field"><label for="mfItemSel">Production item</label>
+        <select id="mfItemSel"><option value="">Select item</option>${items.map(i => `<option value="${esc(i)}" ${i===f.item?'selected':''}>${esc(i)}</option>`).join('')}</select></div>`
+    : `<div class="field"><label for="mfItem">Production item</label><input id="mfItem" data-mf="item" value="${esc(f.item)}"></div>`;
+  const note = (!P.length || !items.length)
+    ? `<p class="hint">${!P.length ? 'No equipment list yet. ' : ''}${!items.length ? 'No production item list yet. ' : ''}Connect Google Sheet and fill the "Equipment" and "Production Items" tabs to get dropdowns.</p>` : '';
+  return `<div class="row" style="margin-top:12px">${equipPart}${itemPart}</div>${note}`;
+}
+
+function renderFill(){
+  const f = S.mf, m = S.date.slice(0,7), editing = !!f.id;
+  const rows = TASKS.map((n,i) => {
+    const a = f.t[2*i], b = f.t[2*i+1];
+    return `<div class="trow"><span class="tname">${esc(n)}</span>
+      <button class="cellbtn pre ${a}" data-mt="${2*i}">${lbl('Pre',a)}</button>
+      <button class="cellbtn post ${b}" data-mt="${2*i+1}">${lbl('Post',b)}</button></div>`;
+  }).join('');
+  const todays = entriesOf(m).filter(e => e.date === S.date);
+  const list = todays.length ? todays.map(e => `
+    <div class="entry">
+      <div class="info"><b>${esc(e.equipment)}${e.serial?` — ${esc(e.serial)}`:''}</b>
+        <span class="meta">${esc(e.item||'No item')} · Pre ${cnt(e.t,0)}/${TASKS.length} · Post ${cnt(e.t,1)}/${TASKS.length}${e.cleanBy?` · ${esc(e.cleanBy)}`:''}</span></div>
+      ${e.verifiedBy ? `<span class="badge">Verified</span>` : `<span class="badge no">Not verified</span>`}
+      <button class="btn alt sm" data-edit="${esc(e.id)}">Edit</button>
+      <button class="btn danger sm" data-del="${esc(e.id)}">Delete</button>
+    </div>`).join('') : `<div class="entry"><span class="meta">No entries for ${fmtDate(S.date)} yet.</span></div>`;
+
+  const locs = distinct('location'), lines = distinct('line');
+  return `
+  <div class="panel">
+    <h3>${editing ? 'Entry (saved automatically)' : 'New entry'}</h3>
+    <div class="row">
+      <div class="field"><label for="fDate">Date</label><input id="fDate" type="date" value="${S.date}"></div>
+      <div class="field"><label for="mfLoc">Location</label><input id="mfLoc" data-mf="location" list="dlLoc" value="${esc(f.location)}" placeholder="Location"></div>
+      <div class="field"><label for="mfLine">Production line</label><input id="mfLine" data-mf="line" list="dlLine" value="${esc(f.line)}" placeholder="Production line"></div>
+    </div>
+    <datalist id="dlLoc">${locs.map(x => `<option value="${esc(x)}">`).join('')}</datalist>
+    <datalist id="dlLine">${lines.map(x => `<option value="${esc(x)}">`).join('')}</datalist>
+    ${equipFields(f)}
+    <p class="hint">Tap once for <b>√</b> (done), twice for <b>X</b> (task not related), three times to clear. <b>Pre</b> = before production, <b>Post</b> = after production. Everything is saved automatically a moment after you change it. To add Post later, open the entry from the list below with Edit. Press New entry to start another machine.</p>
+  </div>
+
+  <div class="quick">
+    <button data-qa="pre">All Pre √</button>
+    <button data-qa="post">All Post √</button>
+    <button data-qa="clear">Clear all</button>
+  </div>
+  <section class="group"><h3>Tasks</h3>${rows}</section>
+
+  <div class="panel">
+    <div class="field"><label for="mfBy">Clean by</label><input id="mfBy" data-mf="cleanBy" value="${esc(f.cleanBy)}" placeholder="Name"></div>
+    <div class="row" style="margin-top:14px;align-items:center">
+      <span id="mfStatus" class="hint" style="margin:0;flex:1 1 200px"></span>
+      <button class="btn alt" id="mfSave">Save now</button>
+      <button class="btn" id="mfNew">New entry</button>
+    </div>
+  </div>
+
+  <section class="group"><h3>Entries on ${fmtDate(S.date)}</h3>${list}</section>`;
+}
+
+let autoTimer = null;
+function scheduleAuto(){
+  clearTimeout(autoTimer); autoTimer = null;
+  if (S.mf.equipment.trim()) autoTimer = setTimeout(() => saveDraft(), 1500);
+  updateMfStatus();
+}
+function commitDraft(){            // save a pending change right now (before leaving the form)
+  if (!autoTimer) return;
+  clearTimeout(autoTimer); autoTimer = null;
+  saveDraft({ noRender:true });
+}
+const isTyping = () => { const a = document.activeElement; return !!(a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)); };
+function saveDraft(opts){
+  opts = opts || {};
+  autoTimer = null;
+  const f = S.mf;
+  if (!f.equipment.trim()){ if (opts.toast) toast('Select the equipment first', true); return; }
+  const e = { id:f.id || genId(), date:S.date, month:S.date.slice(0,7), location:f.location.trim(), line:f.line.trim(),
+    equipment:f.equipment.trim(), serial:f.serial.trim(), item:f.item.trim(), t:f.t.slice(), cleanBy:f.cleanBy.trim(),
+    verifiedBy:'', verifiedAt:'', updated:new Date().toISOString() };
+  f.id = e.id;                                           // from now on this form keeps updating the same entry
+  const old = findEntry(e.id); if (old && old.month !== e.month) removeLocal(e.id);
+  upsertLocal(e);
+  st.ops = st.ops.filter(o => !(o.action==='msave' && o.entry.id===e.id));
+  st.ops.push({ action:'msave', entry:e, month:e.month });
+  st.def = { location:e.location, line:e.line, cleanBy:e.cleanBy };
+  persist();
+  if (opts.toast) toast(CONFIG.SCRIPT_URL ? 'Saved' : 'Saved on this device only');
+  updateMfStatus();
+  if (!opts.noRender && !isTyping()) render();
+  flush();
+}
+function updateMfStatus(){
+  const el = document.getElementById('mfStatus'); if (!el) return;
+  const f = S.mf;
+  el.textContent = !f.equipment.trim() ? 'Select equipment to start saving automatically'
+    : autoTimer ? 'Saving shortly…'
+    : !CONFIG.SCRIPT_URL ? (f.id ? 'Saved on this device only (Google Sheet not connected)' : '')
+    : st.ops.length ? (S.sync === 'offline' ? 'Saved on this device – waiting to sync' : 'Saving…')
+    : f.id ? 'All changes saved ✓' : '';
+}
+
+/* ============ RECORDS ============ */
+const gKey = e => `${e.location||''}${SEP}${e.line||''}`;
+const gLabel = g => [g.location, g.line].filter(Boolean).join(' – ') || 'No location / line';
+function groupsOf(m){
+  const es = entriesOf(m).slice().sort((a,b) => a.date.localeCompare(b.date) || (a.updated||'').localeCompare(b.updated||'') || a.id.localeCompare(b.id));
+  const map = new Map();
+  es.forEach(e => { const k = gKey(e); if (!map.has(k)) map.set(k, { key:k, location:e.location||'', line:e.line||'', entries:[] }); map.get(k).entries.push(e); });
+  let gs = [...map.values()].sort((a,b) => gLabel(a).localeCompare(gLabel(b)));
+  if (S.rGroup) gs = gs.filter(g => g.key === S.rGroup);
+  if (!gs.length) gs = [{ key:'', location:'', line:'', entries:[] }];
+  return gs;
+}
+const viewEntries = m => groupsOf(m).flatMap(g => g.entries);
+
+function pageHTML(g, m, pageNo, pages, rows){
+  const head = TASKS.map(n => `<th colspan="2" class="tn">${esc(n)}</th>`).join('');
+  const pp = TASKS.map(() => '<th class="pp">Pre</th><th class="pp">Post</th>').join('');
+  const body = rows.map(e => {
+    if (!e) return `<tr><td></td><td></td><td></td><td></td>${'<td class="k"></td>'.repeat(NC)}<td></td><td></td></tr>`;
+    return `<tr><td>${fmtDate(e.date)}</td><td>${esc(e.equipment)}</td><td>${esc(e.serial)}</td><td>${esc(e.item)}</td>
+      ${e.t.map(v => `<td class="k">${v==='o'?'√':v==='x'?'X':''}</td>`).join('')}
+      <td>${esc(e.cleanBy)}</td><td>${esc(e.verifiedBy)}</td></tr>`;
+  }).join('');
+  return `
+  <div class="sheetwrap"><div class="sheet">
+    <table class="hd">
+      <tr><td class="t tl" rowspan="2">HEXA FOOD SDN BHD (HEXA 3)</td><td class="k">Doc No.:</td><td class="v">${DOC.no}</td></tr>
+      <tr><td class="k">Issue No:</td><td class="v">${DOC.issue}</td></tr>
+      <tr><td class="t tl" rowspan="2">CLEANING RECORD</td><td class="k">Issue Date:</td><td class="v">${DOC.date}</td></tr>
+      <tr><td class="k">Page:</td><td class="v">${pageNo} of ${pages}</td></tr>
+    </table>
+    <div class="meta2"><span>Location : <b>${esc(g.location) || '___________________'}</b></span></div>
+    <div class="meta2"><span>Production line : <b>${esc(g.line) || '___________________'}</b></span><span>Month/Year: <b>${monthLabel(m)}</b></span></div>
+    <table class="grid">
+      <colgroup><col class="cd"><col class="ce"><col class="cs"><col class="ci">${'<col class="ck">'.repeat(NC)}<col class="cc"><col class="cv"></colgroup>
+      <thead>
+        <tr><th rowspan="3">Date</th><th rowspan="3">Equipment name</th><th rowspan="3">Serial number</th><th rowspan="3">Production item</th>
+            <th colspan="${NC}">Task</th><th rowspan="3">Clean by</th><th rowspan="3">Verified by</th></tr>
+        <tr>${head}</tr>
+        <tr>${pp}</tr>
+      </thead>
+      <tbody>${body}</tbody>
+    </table>
+    <div class="remarks">*Remarks: Fill in √ for task done and X if task is not related.</div>
+  </div></div>`;
+}
+function sheetsHTML(m){
+  return groupsOf(m).map(g => {
+    const pages = Math.max(1, Math.ceil(g.entries.length / ROWS_PER_PAGE));
+    let out = '';
+    for (let p = 0; p < pages; p++){
+      const rows = g.entries.slice(p*ROWS_PER_PAGE, (p+1)*ROWS_PER_PAGE);
+      while (rows.length < ROWS_PER_PAGE) rows.push(null);
+      out += pageHTML(g, m, p+1, pages, rows);
+    }
+    return out;
+  }).join('');
+}
+
+function reviewHTML(m){
+  const es = viewEntries(m);
+  const unver = es.filter(e => !e.verifiedBy);
+  const blanks = es.filter(e => e.t.some(v => !v));
+  let status = !es.length ? '<p>No entries in this month yet.</p>'
+    : `<p>${es.length} entr${es.length>1?'ies':'y'} · <b>${unver.length}</b> not verified</p>`;
+  if (blanks.length) status += `<p class="warn">${blanks.length} entr${blanks.length>1?'ies have':'y has'} blank Pre/Post cells (neither √ nor X).</p>`;
+  else if (es.length) status += '<p class="okc">Every Pre and Post cell is filled.</p>';
+  const verify = unver.length
+    ? `<div class="row"><div class="field"><label for="vName">Verified by</label><input id="vName" placeholder="Name"></div>
+       <button class="btn" id="verifyBtn">Verify ${unver.length} entr${unver.length>1?'ies':'y'}</button></div>`
+    : (es.length ? `<button class="btn alt" id="unverifyBtn">Clear verification</button>` : '');
+  return `<div class="panel noprint"><h3>Review &amp; verify · ${monthLabel(m)}</h3>
+    <p class="hint" style="margin-top:0">Check the sheet below, then verify. Editing an entry later clears its verification.</p>${status}${verify}</div>`;
+}
+function renderRecords(){
+  const m = S.rMonth;
+  const all = new Map(); entriesOf(m).forEach(e => { const k = gKey(e); if (!all.has(k)) all.set(k, { key:k, location:e.location||'', line:e.line||'' }); });
+  const opts = [...all.values()].sort((a,b)=>gLabel(a).localeCompare(gLabel(b)));
+  return `
+  <div class="panel noprint">
+    <div class="row">
+      <div class="field"><label for="rMonth">Month</label><input id="rMonth" type="month" value="${m}"></div>
+      <div class="field"><label for="rGroup">Location / line</label>
+        <select id="rGroup"><option value="">All (each prints separately)</option>${opts.map(g => `<option value="${esc(g.key)}" ${g.key===S.rGroup?'selected':''}>${esc(gLabel(g))}</option>`).join('')}</select></div>
+      <button class="btn alt" id="refreshBtn">Refresh</button>
+      <button class="btn" id="printBtn">Print</button>
+    </div>
+    <p class="hint">Prints on A4 landscape, ${ROWS_PER_PAGE} rows per page. Each location / line starts on its own page with its own header.</p>
+  </div>
+  ${reviewHTML(m)}
+  <div id="sheets">${sheetsHTML(m)}</div>`;
+}
+function verifyView(name){
+  const m = S.rMonth, at = name ? fmtDate(todayStr()) : '';
+  const es = viewEntries(m);
+  const targets = name ? es.filter(e => !e.verifiedBy) : es.filter(e => e.verifiedBy);
+  if (!targets.length) return;
+  targets.forEach(e => { e.verifiedBy = name; e.verifiedAt = at; });
+  st.ops.push({ action:'mverify', ids:targets.map(e => e.id), name, at, month:m });
+  persist(); render(); flush();
+}
+
+/* ============ GOOGLE SHEET TAB ============ */
+function renderSheetTab(){
+  const on = !!CONFIG.SCRIPT_URL;
+  return `
+  <div class="panel">
+    <h3 style="font-size:1.05rem">Google Sheet connection</h3>
+    <p class="hint" style="margin:0 0 12px">Status: <b>${on ? 'Connected' : 'Not connected (data stays on this device)'}</b></p>
+    <div class="field"><label for="urlIn">Apps Script Web App URL</label>
+      <input id="urlIn" type="url" inputmode="url" placeholder="https://script.google.com/macros/s/.../exec" value="${esc(CONFIG.SCRIPT_URL)}"></div>
+    <div class="row" style="margin-top:12px">
+      <button class="btn" id="connectBtn">Save &amp; test</button>
+      <button class="btn alt" id="disconnectBtn" ${on?'':'disabled'}>Disconnect</button>
+    </div>
+    <p class="hint">Entries are saved in a tab named "Machine Log". The URL is remembered on this device only.</p>
+  </div>
+  <div class="panel">
+    <h3 style="font-size:1.05rem">Dropdown lists</h3>
+    <p class="hint" style="margin:0 0 12px">${pairs().length} equipment · ${st.items.length} production item${st.items.length===1?'':'s'} loaded from the Google Sheet.</p>
+    <button class="btn alt" id="reloadBtn" ${on?'':'disabled'}>Reload lists</button>
+    <p class="hint">In the Google Sheet, tab <b>Equipment</b>: Equipment name | Serial number (Location and Production line are optional). Tab <b>Production Items</b>: one production item per row. Change them in the Sheet and the form updates by itself the next time it is opened or refreshed. Entries already saved keep the wording they were saved with.</p>
+  </div>`;
+}
+async function connect(){
+  const url = (document.getElementById('urlIn').value || '').trim();
+  if (!/^https:\/\/script\.google\.com\/.+\/exec/.test(url)){ toast('Paste the Web App URL ending in /exec', true); return; }
+  const btn = document.getElementById('connectBtn'); btn.disabled = true; btn.textContent = 'Testing…';
+  try{
+    const r = await fetch(`${url}?action=machines`); const j = await r.json();
+    if (!j.ok) throw new Error();
+    CONFIG.SCRIPT_URL = url; applyLists(j);
+    try{ localStorage.setItem(URL_KEY, url); }catch(e){}
+    persist(); S.sync = 'ok'; toast('Connected to Google Sheet'); flush();
+  }catch(e){ toast('Could not connect. Check the URL and that access is set to Anyone.', true); }
+  finally{ render(); updateChip(); }
+}
+function disconnect(){
+  CONFIG.SCRIPT_URL = ''; try{ localStorage.removeItem(URL_KEY); }catch(e){}
+  S.sync = 'local'; toast('Disconnected'); render(); updateChip();
+}
+async function reloadList(){
+  try{ const j = await netGet('machines'); if (!j.ok) throw new Error(); applyLists(j); persist(); toast('Lists updated'); }
+  catch(e){ toast('Could not load the list', true); }
+  render();
+}
+
+/* ============ RENDER + EVENTS ============ */
+function render(){
+  document.querySelectorAll('.tabs button').forEach(b => b.setAttribute('aria-selected', b.dataset.tab === S.tab));
+  const main = document.getElementById('main');
+  main.className = S.tab === 'records' ? 'wide' : '';
+  main.innerHTML = S.tab === 'fill' ? renderFill() : S.tab === 'records' ? renderRecords() : renderSheetTab();
+  updateChip();
+  updateMfStatus();
+}
+async function loadAndRender(){
+  render();
+  if (!CONFIG.SCRIPT_URL || S.tab === 'sheet') return;
+  const tab = S.tab;
+  await pullMonth(tab === 'fill' ? S.date.slice(0,7) : S.rMonth);
+  const a = document.activeElement;
+  const typing = a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName);
+  if (S.tab === tab && !typing) render();
+}
+
+document.addEventListener('click', e => {
+  const t = e.target.closest('button'); if (!t) return;
+  if (t.dataset.tab){ commitDraft(); S.tab = t.dataset.tab; loadAndRender(); return; }
+  if (t.dataset.mt !== undefined){
+    const i = +t.dataset.mt, v = S.mf.t[i];
+    S.mf.t[i] = v === '' ? 'o' : v === 'o' ? 'x' : '';
+    scheduleAuto(); render(); return;
+  }
+  if (t.dataset.qa){
+    const a = t.dataset.qa;
+    for (let i = 0; i < NC; i++){
+      if (a === 'clear') S.mf.t[i] = '';
+      else if ((a === 'pre' && i % 2 === 0) || (a === 'post' && i % 2 === 1)) S.mf.t[i] = 'o';
+    }
+    scheduleAuto(); render(); return;
+  }
+  if (t.dataset.edit){
+    commitDraft();
+    const en = findEntry(t.dataset.edit); if (!en) return;
+    if (en.verifiedBy && !confirm('This entry is already verified. Editing it will clear the verification. Continue?')) return;
+    S.mf = Object.assign(blankDraft(), en, { t:en.t.slice() }); S.date = en.date;
+    render(); window.scrollTo({ top:0, behavior:'smooth' }); return;
+  }
+  if (t.dataset.del){
+    const en = findEntry(t.dataset.del); if (!en) return;
+    if (!confirm(`Delete the entry for ${en.equipment}${en.serial ? ' — ' + en.serial : ''} on ${fmtDate(en.date)}?`)) return;
+    removeLocal(en.id);
+    st.ops = st.ops.filter(o => !(o.action==='msave' && o.entry.id===en.id));
+    st.ops.push({ action:'mdelete', id:en.id, month:en.month });
+    if (S.mf.id === en.id){ clearTimeout(autoTimer); autoTimer = null; S.mf = blankDraft(); }
+    persist(); render(); flush(); toast('Deleted'); return;
+  }
+  if (t.id === 'mfSave'){ clearTimeout(autoTimer); saveDraft({ toast:true }); }
+  if (t.id === 'mfNew'){ commitDraft(); S.mf = blankDraft(); render(); window.scrollTo({ top:0, behavior:'smooth' }); }
+  if (t.id === 'printBtn') window.print();
+  if (t.id === 'refreshBtn') loadAndRender();
+  if (t.id === 'verifyBtn'){
+    const name = (document.getElementById('vName').value || '').trim();
+    if (!name){ toast('Enter the verifier name first', true); return; }
+    const es = viewEntries(S.rMonth);
+    if (es.some(x => !x.verifiedBy && x.t.some(v => !v)) && !confirm('Some entries still have blank Pre/Post cells. Verify anyway?')) return;
+    verifyView(name);
+  }
+  if (t.id === 'unverifyBtn'){ if (confirm('Clear verification for the entries shown?')) verifyView(''); }
+  if (t.id === 'connectBtn') connect();
+  if (t.id === 'disconnectBtn') disconnect();
+  if (t.id === 'reloadBtn') reloadList();
+});
+document.addEventListener('input', e => {
+  const f = e.target.dataset && e.target.dataset.mf;
+  if (f){ S.mf[f] = e.target.value; scheduleAuto(); }
+});
+document.addEventListener('change', e => {
+  const id = e.target.id;
+  if (id === 'fDate'){ if (e.target.value){ commitDraft(); S.mf = blankDraft(); S.date = e.target.value; loadAndRender(); } }
+  else if (id === 'rMonth'){ if (e.target.value){ S.rMonth = e.target.value; S.rGroup = ''; loadAndRender(); } }
+  else if (id === 'rGroup'){ S.rGroup = e.target.value; render(); }
+  else if (id === 'mfEq'){
+    const f = S.mf;
+    if (!e.target.value){ f.equipment = ''; f.serial = ''; }
+    else {
+      const [eq, serial] = e.target.value.split(SEP);
+      f.equipment = eq; f.serial = serial;
+      const row = st.equip.find(r => r.equipment === eq && r.serial === serial);
+      if (row && row.location && !f.location) f.location = row.location;
+      if (row && row.line && !f.line) f.line = row.line;
+    }
+    scheduleAuto(); render();
+  }
+  else if (id === 'mfItemSel'){ S.mf.item = e.target.value; scheduleAuto(); }
+});
+async function refreshLists(){
+  if (!CONFIG.SCRIPT_URL) return;
+  try{ const j = await netGet('machines'); if (j.ok){ applyLists(j); persist(); if (S.tab === 'fill' && !(document.activeElement && /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName))) render(); } }catch(e){}
+}
+document.addEventListener('visibilitychange', () => { if (document.hidden) commitDraft(); else refreshLists(); });
+window.addEventListener('pagehide', commitDraft);
+setInterval(refreshLists, 300000);
+window.addEventListener('online', flush);
+setInterval(() => { if (st.ops.length) flush(); }, 20000);
+
+loadAndRender().then(flush);
+</script>
+</body>
+</html>
